@@ -2,22 +2,9 @@ import { ActionFunction, EVMcrispr } from "src";
 import { normalizeActions } from "./helpers";
 
 class EvmclParser {
-  env: Map<string, string> = new Map();
   evmcrispr: EVMcrispr;
   constructor(evmcrispr: EVMcrispr) {
     this.evmcrispr = evmcrispr;
-  }
-
-  /**
-   * Saves an evmcl environment variable
-   * @param varName Variable name, must start with $
-   * @param value Parsed value to be stored
-   */
-  set(varName: string, parsedArgs: string) {
-    if (varName[0] !== "$") {
-      throw new Error("Environment variables must start with $ symbol.");
-    }
-    this.env.set(varName, parsedArgs);
   }
 
   /**
@@ -34,7 +21,7 @@ class EvmclParser {
    * @param arg Argument to be processed
    * @returns Parsed value
    */
-  async arg(arg: string): Promise<string> {
+  async arg(arg: string): Promise<any> {
     if (arg && arg[0] == "$") {
       return this.#env(arg);
     } else if (arg && arg[0] == "@") {
@@ -73,11 +60,11 @@ class EvmclParser {
     return arg;
   }
 
-  #env(varName: string): string {
-    if (!this.env.has(varName)) {
+  #env(varName: string): any {
+    if (typeof this.evmcrispr.env(varName) === "undefined") {
       throw new Error(`Environment variable ${varName} not defined.`);
     } else {
-      return this.env.get(varName)!;
+      return this.evmcrispr.env(varName)!;
     }
   }
 
@@ -137,8 +124,7 @@ export default function evmcl(strings: TemplateStringsArray, ...keys: string[]):
           case "set":
             return async () => {
               const [varName, ...rest] = args;
-              parse.set(varName, (await parse.args(rest)).join(""));
-              return [];
+              return evmcrispr.set(varName, await parse.args(rest))();
             };
           default:
             throw new Error("Unrecognized command: " + commandName);

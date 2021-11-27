@@ -61,6 +61,8 @@ export default class EVMcrispr {
   #appCache: AppCache;
   #appArtifactCache: AppArtifactCache;
   #extensions: Extensions;
+  #env: Map<string, any> = new Map();
+
   /**
    * The connector used to fetch Aragon apps.
    */
@@ -231,6 +233,20 @@ export default class EVMcrispr {
    */
   apps(): (AppIdentifier | LabeledAppIdentifier)[] {
     return [...this.#appCache.keys()];
+  }
+
+  env(varName: string): any {
+    return this.#env.get(varName);
+  }
+
+  set(varName: string, value: unknown): ActionFunction {
+    return async () => {
+      if (varName[0] !== "$") {
+        throw new Error("Environment variables must start with $ symbol.");
+      }
+      this.#env.set(varName, value);
+      return [];
+    };
   }
 
   /**
