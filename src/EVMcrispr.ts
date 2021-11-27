@@ -33,7 +33,6 @@ import {
   Address,
   Action,
   ActionFunction,
-  ActionInterpreter,
   App,
   AppArtifactCache,
   AppCache,
@@ -46,8 +45,10 @@ import {
   ParsedApp,
   Permission,
   PermissionP,
+  Extensions,
 } from "./types";
 import { ErrorException, ErrorInvalid, ErrorNotFound } from "./errors";
+import defaultExtensions from "./extensions";
 
 /**
  * The default main EVMcrispr class that expose all the functionalities.
@@ -59,6 +60,7 @@ export default class EVMcrispr {
    */
   #appCache: AppCache;
   #appArtifactCache: AppArtifactCache;
+  #extensions: Extensions;
   /**
    * The connector used to fetch Aragon apps.
    */
@@ -82,12 +84,13 @@ export default class EVMcrispr {
    */
   BURN_ENTITY: Address = "0x" + "0".repeat(39) + "1";
 
-  protected constructor(chainId: number, signer: Signer, options: { ipfsGateway: string }) {
+  protected constructor(chainId: number, signer: Signer, options: EVMcrisprOptions) {
     this.#appCache = new Map();
     this.#appArtifactCache = new Map();
     this._connector = new Connector(chainId);
     this.#installedAppCounter = 0;
     this._ipfsResolver = createIpfsResolver(buildIpfsTemplate(options.ipfsGateway));
+    this.#extensions = options.extensions;
     this.#signer = signer;
   }
 
@@ -103,7 +106,7 @@ export default class EVMcrispr {
   static async create(
     daoAddress: Address,
     signer: Signer,
-    options: EVMcrisprOptions = { ipfsGateway: IPFS_GATEWAY }
+    options: EVMcrisprOptions = { ipfsGateway: IPFS_GATEWAY, extensions: { ...defaultExtensions } }
   ): Promise<EVMcrispr> {
     const evmcrispr = new EVMcrispr(await signer.getChainId(), signer, options);
 
@@ -122,6 +125,10 @@ export default class EVMcrispr {
 
   get signer(): Signer {
     return this.#signer;
+  }
+
+  get extensions(): Extensions {
+    return this.#extensions;
   }
 
   /**
@@ -324,7 +331,7 @@ export default class EVMcrispr {
    * any pre-transactions that need to be executed in advance.
    */
   async encode(
-    actionFunctions: ActionFunction[] | ((evm: ActionInterpreter) => ActionFunction),
+    actionFunctions: ActionFunction[] | ((evm: EVMcrispr) => ActionFunction),
     path: Entity[],
     options?: ForwardOptions
   ): Promise<{ action: Action; preTxActions: Action[] }> {
@@ -406,7 +413,7 @@ export default class EVMcrispr {
    * @returns A promise that resolves to a receipt of the sent transaction.
    */
   async forward(
-    actions: ActionFunction[] | ((evm: ActionInterpreter) => ActionFunction),
+    actions: ActionFunction[] | ((evm: EVMcrispr) => ActionFunction),
     path: Entity[],
     options?: ForwardOptions
   ): Promise<providers.TransactionReceipt> {

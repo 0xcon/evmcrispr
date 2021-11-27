@@ -8,7 +8,6 @@ export {
   Address,
   Action,
   ActionFunction,
-  ActionInterpreter,
   App,
   AppCache,
   AppIdentifier,
@@ -21,3 +20,5 @@ export {
   PermissionP,
   Repo,
 } from "./types";
+
+export { default as defaultExtensions } from "./extensions";

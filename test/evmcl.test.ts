@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ActionInterpreter, ActionFunction } from "../src";
+import { EVMcrispr, ActionFunction } from "../src";
 import evmcl from "../src/evmcl";
 import { APP } from "./fixtures";
 
@@ -21,16 +21,16 @@ const mockExecFunction = (method: string) => ({
   }),
 });
 
-const actionInterpreterMock = {
+const evmcrisprMock = {
   ...mockFunction("install"),
   ...mockFunction("grant"),
   ...mockFunction("revoke"),
   ...mockExecFunction("newVote"),
   ...mockFunction("act"),
-} as unknown as ActionInterpreter;
+} as unknown as EVMcrispr;
 
-async function check(actions: (evm: ActionInterpreter) => ActionFunction, calls: any[]) {
-  await actions(actionInterpreterMock);
+async function check(actions: (evm: EVMcrispr) => ActionFunction, calls: any[]) {
+  await actions(evmcrisprMock)();
   expect(_exec).to.be.deep.eq(calls);
 }
 

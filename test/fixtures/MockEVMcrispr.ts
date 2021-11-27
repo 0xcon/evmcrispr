@@ -24,7 +24,7 @@ class MockEVMcrispr extends EVMcrispr {
   static async create(
     daoAddress: Address,
     signer: Signer,
-    options: EVMcrisprOptions = { ipfsGateway: IPFS_GATEWAY }
+    options: EVMcrisprOptions = { ipfsGateway: IPFS_GATEWAY, extensions: {} }
   ): Promise<MockEVMcrispr> {
     const mockevmcrispr = new MockEVMcrispr(await signer.getChainId(), signer, options);
 
